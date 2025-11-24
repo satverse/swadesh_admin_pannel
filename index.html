@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Swadeshi - Admin Product Upload</title>
+
+<style>
+    body {
+        margin: 0;
+        font-family: "Poppins", sans-serif;
+        background: #f7f8fa;
+        color: #111;
+    }
+
+    body.modal-open {
+        overflow: hidden;
+    }
+
+    .navbar .logo {
+        font-size: 22px;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .heading {
+        font-size: 32px;
+        font-weight: 700;
+        margin: 40px;
+    }
+
+    .add-btn {
+        float: right;
+        margin-right: 40px;
+        margin-top: -70px;
+        background: #111;
+        color: #fff;
+        padding: 10px 24px;
+        border-radius: 8px;
+        cursor: pointer;
+        border: none;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 15px;
+    }
+
+    .modal {
+        position: fixed;
+        top: 0; left: 0;
+        width: 100%; height: 100%;
+        background: rgba(0,0,0,0.5);
+        display: none;
+        justify-content: center;
+        align-items: center;
+        z-index: 999;
+    }
+
+    .modal-content {
+        width: 550px;
+        background: #fff;
+        padding: 25px;
+        border-radius: 10px;
+        animation: popup 0.2s ease-in-out;
+        max-height: 85vh;
+        overflow-y: auto;
+    }
+
+    @keyframes popup {
+        from { opacity: 0; transform: scale(0.95); }
+        to { opacity: 1; transform: scale(1); }
+    }
+
+    label { font-weight: 600; margin-top: 15px; display: block; }
+    input, textarea, select {
+        width: 100%;
+        padding: 12px;
+        margin-top: 6px;
+        border: 1px solid #ccc;
+        border-radius: 8px;
+        font-size: 15px;
+        resize: none;
+    }
+
+    textarea { height: 80px; }
+
+    .btn-row {
+        margin-top: 20px;
+        display: flex;
+        justify-content: flex-end;
+        gap: 12px;
+    }
+
+    .cancel-btn, .submit-btn {
+        padding: 10px 22px;
+        border-radius: 8px;
+        font-size: 16px;
+        cursor: pointer;
+        border: none;
+    }
+
+    .cancel-btn { background: #ddd; }
+    .submit-btn { background: #111; color: #fff; }
+
+    #mediaPreview img, 
+    #mediaPreview video {
+        width: 110px;
+        height: 110px;
+        object-fit: cover;
+        margin: 6px;
+        border-radius: 10px;
+        border: 1px solid #bbb;
+        box-shadow: 0 3px 8px rgba(0,0,0,0.08);
+    }
+
+    .navbar {
+        width: 100%;
+        padding: 15px 25px;
+        background: #fff;
+        display: flex;
+        align-items: center;
+        border-bottom: 1px solid #eee;
+        gap: 20px;
+    }
+
+    .logo {
+        font-size: 20px;
+        font-weight: 600;
+        white-space: nowrap;
+    }
+
+    .navterms {
+        display: flex;
+        gap: 22px;
+        margin: 0 auto; 
+        flex: 1;   
+        justify-content: center;
+    }
+
+    .navterms a {
+        text-decoration: none;
+        font-size: 16px;
+        color: #000;
+        padding: 8px 16px;
+        border-radius: 8px;
+        transition: 0.25s;
+        font-weight: 500;
+    }
+    .navterms a:hover {
+        background: #000;
+        color: #fff;
+        transform: translateY(-2px);
+    }
+
+    #productDisplay {
+        margin: 20px auto;
+        max-width: 600px;
+        border: 1px solid #ddd;
+        padding: 15px;
+        border-radius: 10px;
+        background: #fafafa;
+        display: none;
+    }
+
+    #deleteBtn {
+        background: #e63946;
+        color: white;
+        padding: 10px 18px;
+        border: none;
+        border-radius: 8px;
+        font-size: 15px;
+        cursor: pointer;
+        transition: 0.2s;
+        margin-top: 15px;
+    }
+
+    #secretModal .modal-content {
+        width: 400px;
+        text-align: center;
+    }
+
+    #secretCodeInput {
+        width: 80%;
+        margin: 20px auto;
+    }
+    
+    #mediaDisplay img,
+#mediaDisplay video {
+  width: 100%;
+  max-width: 250px;
+  /* jitna chhota chahiye utna rakh */
+  height: auto;
+  margin: 10px;
+  border-radius: 10px;
+  object-fit: cover;
+}
+</style>
+</head>
+
+<body>
+
+<div class="navbar">
+    <div class="logo">Swadeshi Clothing</div>
+
+    <div class="navterms">
+        <a href="#">Home</a>
+        <a href="#">Categories</a>
+        <a href="#">Admin</a>
+    </div>
+
+    <div class="search-box">
+        <input type="text" id="searchInput" placeholder="Search products by ID...">
+    </div>
+</div>
+
+<div class="heading">Product Management</div>
+
+<button class="add-btn" id="openmodal"> + Add Product </button>
+
+<!-- Secret Code Modal -->
+<div class="modal" id="secretModal">
+    <div class="modal-content">
+        <h2>Enter Secret Code</h2>
+        <input type="password" id="secretCodeInput" placeholder="Secret Code">
+        <div class="btn-row">
+            <button class="submit-btn" id="checksecret">Submit</button>
+        </div>
+    </div>
+</div>
+
+<!-- Product Display -->
+<div id="productDisplay">
+    <h3>Product Details</h3>
+    <p><strong>ID:</strong> <span id="prodId"></span></p>
+    <p><strong>Title:</strong> <span id="prodTitle"></span></p>
+    <p><strong>Description:</strong> <span id="prodDesc"></span></p>
+    <p><strong>Category:</strong> <span id="prodCategory"></span></p>
+    <p><strong>Tags:</strong> <span id="prodTags"></span></p>
+    <p><strong>Price:</strong> <span id="prodPrice"></span></p>
+    <p><strong>Created At:</strong> <span id="prodCreatedAt"></span></p>
+    <p><strong>Original Price:</strong> <span id="prodOriginalPrice"></span></p>
+<p><strong>Rating:</strong> <span id="prodRating"></span></p>
+
+
+    <h4>Media</h4>
+    <div id="mediaDisplay"></div>
+    <br>
+    <button id="deleteBtn">Delete Product</button>
+</div>
+
+<!-- Add Product Modal -->
+<div class="modal" id="modal">
+    <div class="modal-content">
+        <h2>Add New Product</h2>
+        <p>Fill details to add a new product.</p>
+
+        <label>Product ID *</label>
+        <input id="pId" placeholder="unique-id">
+
+        <label>Title *</label>
+        <input id="title" placeholder="Product title">
+
+        <label>Description</label>
+        <textarea id="desc" placeholder="Write product description"></textarea>
+
+        <label>Category *</label>
+        <input id="category" placeholder="Saree, Lehenga ...">
+
+        <label>Tags (comma-separated)</label>
+        <textarea id="tags" placeholder="new, trending, cotton"></textarea>
+        <!-- Original Price -->
+<label for="originalprice">Original Price</label>
+<input type="number" id="originalprice" placeholder="Enter Original Price">
+
+
+
+        <label>Price (₹) *</label>
+        <input id="price" type="number" placeholder="0.00">
+        
+        <!-- Rating -->
+<label for="rating">Rating (0 - 5)</label>
+<input type="number" step="0.1" min="0" max="5" id="rating" placeholder="Enter Rating">
+
+
+        <hr>
+
+        <h3>Upload Media</h3>
+
+        <input type="file" id="firstFile" accept="image/*">
+        <button id="uploadFirstBtn">Upload First Image</button>
+
+        <br><br>
+
+        <div id="uploadMoreSection" style="display:none;">
+            <input type="file" id="moreFile" accept="image/*,video/*">
+            <button id="uploadMoreBtn">Upload More</button>
+        </div>
+
+        <h4>Media Preview</h4>
+        <div id="mediaPreview"></div>
+
+        <div id="status" style="margin-top:10px;font-weight:500;"></div>
+
+        <div class="btn-row">
+            <button class="cancel-btn" onclick="closeModal()">Cancel</button>
+            <button class="submit-btn" id="saveBtn">Save Product</button>
+        </div>
+    </div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.2/firebase-app.js";
+import { getDatabase, ref, set, get, remove } from "https://www.gstatic.com/firebasejs/10.7.2/firebase-database.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCA_H8mTHSPGKZxmadwDAHZfEcS3pqvLMY",
+  authDomain: "swadeshi-84d03.firebaseapp.com",
+  projectId: "swadeshi-84d03",
+  storageBucket: "swadeshi-84d03.appspot.com",
+  messagingSenderId: "1047926315874",
+  appId: "1:1047926315874:web:1a20eca775794903aaaa3b"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
+const modal = document.getElementById("modal");
+
+const CLOUD_NAME = "dswa2iegg";
+const UPLOAD_PRESET = "unsigned_preset";
+
+let mediaURLs = [];
+
+// ---------------- SECRET CODE CHECK ----------------
+document.addEventListener("DOMContentLoaded", () => {
+    const sm = document.getElementById("secretModal");
+    sm.style.display = "flex";
+    document.body.classList.add("modal-open");
+});
+
+const secretcodecheck = document.getElementById("checksecret");
+secretcodecheck.onclick = async () => {
+    const enteredCode = document.getElementById("secretCodeInput").value.trim();
+    if (!enteredCode) return alert("Enter the secret code!");
+
+    try {
+        const snapshot = await get(ref(db, "passwd"));
+        if (snapshot.exists() && snapshot.val() === enteredCode) {
+            document.getElementById("secretModal").style.display = "none";
+            document.body.classList.remove("modal-open");
+        } else {
+            alert("Incorrect secret code!");
+            window.close();
+        }
+    } catch {
+        alert("Error verifying code");
+    }
+};
+
+// ---------------- OPEN ADD PRODUCT MODAL ----------------
+document.getElementById("openmodal").addEventListener("click", () => {
+    modal.style.display = "flex";
+    document.body.classList.add("modal-open");
+});
+
+// ---------------- SEARCH PRODUCT ----------------
+const searchInput = document.getElementById("searchInput");
+const productDisplay = document.getElementById("productDisplay");
+const prodId = document.getElementById("prodId");
+const prodTitle = document.getElementById("prodTitle");
+const prodDesc = document.getElementById("prodDesc");
+const prodCategory = document.getElementById("prodCategory");
+const prodTags = document.getElementById("prodTags");
+const prodPrice = document.getElementById("prodPrice");
+const prodOriginalPrice = document.getElementById("prodOriginalPrice");
+const prodRating = document.getElementById("prodRating");
+const prodCreatedAt = document.getElementById("prodCreatedAt");
+const mediaDisplay = document.getElementById("mediaDisplay");
+const deleteBtn = document.getElementById("deleteBtn");
+const statusEl = document.getElementById("status");
+
+searchInput.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") searchProduct();
+});
+
+async function searchProduct() {
+    const pid = searchInput.value.trim();
+    if (!pid) return alert("Enter a Product ID!");
+
+    statusEl.innerText = "Searching...";
+    productDisplay.style.display = "none";
+
+    try {
+        const snapshot = await get(ref(db, `products/${pid}`));
+        if (snapshot.exists()) {
+            const product = snapshot.val();
+
+            prodId.innerText = pid;
+            prodTitle.innerText = product.title;
+            prodDesc.innerText = product.description;
+            prodCategory.innerText = product.category;
+            prodTags.innerText = product.tags ? product.tags.join(", ") : "N/A";
+            prodPrice.innerText = product.price;
+            prodOriginalPrice.innerText = product.originalPrice || "N/A";
+            prodRating.innerText = product.rating || "N/A";
+            prodCreatedAt.innerText = product.createdAt ? new Date(product.createdAt).toLocaleString() : "N/A";
+
+            mediaDisplay.innerHTML = "";
+            if (product.media) {
+                product.media.forEach(url => {
+                    let el;
+                    if (url.includes(".mp4")) {
+                        el = document.createElement("video");
+                        el.src = url;
+                        el.controls = true;
+                    } else {
+                        el = document.createElement("img");
+                        el.src = url;
+                        el.onclick = () => window.open(url);
+                    }
+                    mediaDisplay.appendChild(el);
+                });
+            }
+
+            statusEl.innerText = "Product found";
+            productDisplay.style.display = "block";
+        } else {
+            statusEl.innerText = "Not found";
+            alert("Product not found!");
+        }
+    } catch {
+        statusEl.innerText = "Error searching";
+    }
+}
+
+// ---------------- DELETE PRODUCT ----------------
+deleteBtn.onclick = async () => {
+    const pid = prodId.innerText;
+    if (!pid) return;
+
+    if (!confirm("Delete product?")) return;
+
+    try {
+        await remove(ref(db, `products/${pid}`));
+        alert("Deleted!");
+        productDisplay.style.display = "none";
+        searchInput.value = "";
+    } catch {
+        alert("Delete failed");
+    }
+};
+
+// ---------------- CLOUDINARY UPLOAD ----------------
+async function uploadToCloudinary(file) {
+    const url = `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/${file.type.startsWith("video") ? "video" : "image"}/upload`;
+    const data = new FormData();
+
+    data.append("file", file);
+    data.append("upload_preset", UPLOAD_PRESET);
+
+    let res = await fetch(url, { method: "POST", body: data });
+    let json = await res.json();
+    return json.secure_url;
+}
+
+uploadFirstBtn.onclick = async () => {
+    if (!firstFile.files[0]) return alert("Select image!");
+
+    statusEl.innerText = "Uploading...";
+
+    let url = await uploadToCloudinary(firstFile.files[0]);
+    mediaURLs.push(url);
+
+    let img = document.createElement("img");
+    img.src = url;
+    mediaPreview.appendChild(img);
+
+    uploadMoreSection.style.display = "block";
+    statusEl.innerText = "Uploaded!";
+};
+
+uploadMoreBtn.onclick = async () => {
+    if (!moreFile.files[0]) return alert("Select file!");
+
+    statusEl.innerText = "Uploading...";
+
+    let url = await uploadToCloudinary(moreFile.files[0]);
+    mediaURLs.push(url);
+
+    let el;
+    if (moreFile.files[0].type.startsWith("video")) {
+        el = document.createElement("video");
+        el.src = url;
+        el.controls = true;
+    } else {
+        el = document.createElement("img");
+        el.src = url;
+    }
+    mediaPreview.appendChild(el);
+
+    statusEl.innerText = "Uploaded!";
+};
+
+// ---------------- SAVE PRODUCT ----------------
+saveBtn.onclick = async () => {
+    const pid = pId.value.trim();
+    const titleValue = title.value.trim();
+    const descValue = desc.value.trim();
+    const categoryValue = category.value.trim();
+    const tagsInput = tags.value.trim();
+    const priceValue = Number(price.value);
+    const originalPriceValue = Number(originalprice.value);
+    const ratingValue = rating.value.trim();
+
+    if (!pid || !titleValue || !categoryValue) return alert("Missing fields!");
+    if (mediaURLs.length === 0) return alert("Upload 1 image!");
+
+    const product = {
+        title: titleValue,
+        description: descValue,
+        category: categoryValue,
+        tags: tagsInput ? tagsInput.split(",").map(t => t.trim()) : [],
+        price: priceValue,
+        originalPrice: originalPriceValue,
+        rating: ratingValue,
+        media: mediaURLs,
+        createdAt: Date.now()
+    };
+
+    statusEl.innerText = "Saving...";
+    await set(ref(db, "products/" + pid), product);
+
+    statusEl.innerText = "Saved!";
+    modal.style.display = "none";
+    document.body.classList.remove("modal-open");
+};
+
+window.closeModal = () => {
+    modal.style.display = "none";
+    document.body.classList.remove("modal-open");
+};
+</script>
+
+</body>
+</html>

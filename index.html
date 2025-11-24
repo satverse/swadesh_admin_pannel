@@ -241,6 +241,8 @@
     <p><strong>Created At:</strong> <span id="prodCreatedAt"></span></p>
     <p><strong>Original Price:</strong> <span id="prodOriginalPrice"></span></p>
 <p><strong>Rating:</strong> <span id="prodRating"></span></p>
+<p><strong>Change Stock Status to:</strong> <button id="stockBtn">Loading...</button></p>
+
 
 
     <h4>Media</h4>
@@ -331,6 +333,9 @@ const CLOUD_NAME = "dswa2iegg";
 const UPLOAD_PRESET = "unsigned_preset";
 
 let mediaURLs = [];
+
+const stockBtn = document.getElementById("stockBtn");
+
 
 // ---------------- SECRET CODE CHECK ----------------
 document.addEventListener("DOMContentLoaded", () => {
@@ -425,6 +430,17 @@ async function searchProduct() {
 
             statusEl.innerText = "Product found";
             productDisplay.style.display = "block";
+            
+            if (!("inStock" in product)) {
+  // agar firebase me ye field nahi hai toh default true set kar de
+  await set(ref(db, `products/${pid}/inStock`), true);
+  product.inStock = true;
+}
+
+
+
+updateStockBtnText(product.inStock);
+
         } else {
             statusEl.innerText = "Not found";
             alert("Product not found!");
@@ -432,6 +448,12 @@ async function searchProduct() {
     } catch {
         statusEl.innerText = "Error searching";
     }
+    
+    
+
+}
+function updateStockBtnText(isInStock) {
+  stockBtn.innerText = isInStock ? "Not in Stock" : "In Stock";
 }
 
 // ---------------- DELETE PRODUCT ----------------
@@ -540,6 +562,34 @@ window.closeModal = () => {
     modal.style.display = "none";
     document.body.classList.remove("modal-open");
 };
+
+
+
+
+
+
+stockBtn.onclick = async () => {
+    const pid = prodId.innerText;
+    if (!pid) return;
+
+    try {
+        const snapshot = await get(ref(db, `products/${pid}/inStock`));
+        let currentStock = true;
+        if (snapshot.exists()) currentStock = snapshot.val();
+
+        // toggle
+        const newStock = !currentStock;
+        await set(ref(db, `products/${pid}/inStock`), newStock);
+
+        updateStockBtnText(newStock);
+    } catch (err) {
+        alert("Error updating stock");
+        console.error(err);
+    }
+};
+
+
+
 </script>
 
 </body>
